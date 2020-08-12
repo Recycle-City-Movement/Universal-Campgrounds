@@ -2,7 +2,7 @@
 
 This is an idea that would create living space for those on the move. It's a very simple idea that potentially could help travelers find a place to rest and to be safe.
 
-A Universal Campground would provide a free space to park a vehicle, set up a tent, cook food, and offer facilities for personal hygiene such as privacy-oriented showers, sinks, and toilets. Other potential improvements would be an underground storm-shelter and communication kiosks.
+A Universal Campground would provide a free space to park a vehicle, set up a tent, cook food, and offer facilities for personal hygiene such as privacy-oriented showers, sinks, and toilets. Other potential improvements would include an underground storm-shelter and communication kiosks.
 
 There would be no fees attached to using the campground. This is the universal aspect of the campground. There would be no limitation to the amount of time a party could stay at the campground.
 
