@@ -13,3 +13,5 @@ Campgrounds would be located around cities. Thus homeless people would naturally
 As part of the campground landscape, trees, shrubs, gardens, and water-conversation areas would also be positive aspects of a campground that would improve living-conditions.
 
 The project's goal would be to continually expand to every city until everyone with the need for it was accommodated.
+
+Charles Bartley / August 11, 2020
