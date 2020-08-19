@@ -1,6 +1,6 @@
 # Universal-Campgrounds
 
-![Universal Campground](PC.png) This is an idea that would create living space for those on the move. It's a very simple idea that potentially could help travelers find a place to rest and to be safe.
+![Universal Campground](UC.png) This is an idea that would create living space for those on the move. It's a very simple idea that potentially could help travelers find a place to rest and to be safe.
 
 A Universal Campground would provide a free space to park a vehicle, set up a tent, cook food, and offer facilities for personal hygiene such as privacy-oriented showers, sinks, and toilets. Other potential improvements would include an underground storm-shelter and communication kiosks.
 
