@@ -1,0 +1,427 @@
+from PSPApp import *
+import math
+
+SILENT = {'ExecutionMode': App.Constants.ExecutionMode.Silent}
+GENERAL_SETTINGS = {'GeneralSettings': SILENT}
+CENTER_X = 500
+CENTER_Y = 500
+LINE_WIDTH = 10
+RADIUS = CENTER_X - LINE_WIDTH - 2
+INNER_RADIUS = RADIUS / 4
+TOP_POINT = 6.28319
+SEAM_COLOR = LINE_COLOR = 33, 99, 16
+#SHELTER_COLOR = 33, 33, 33
+SHELTER_COLOR = 255, 209, 22
+DEGREE_60 = 1.0472
+
+"""
+This script creates an Universal Campground Symbol.
+The symbol is saved with
+a transparency enabled PNG type file.
+
+This script requires: Corel's PaintShop Pro v5+
+
+In order to run the script, place it in a PSP Script folder
+previously identified by File/Preferences/Program Locations.
+
+Run this script from the Toolbars/Script widget.
+"""
+
+
+def ScriptProperties():
+    return {
+        'Author': u'',
+        'Copyright': u'',
+        'Description': u'',
+        'Host': u'PaintShop Pro',
+        'Host Version': u'19.00'}
+
+
+def draw_circle(radius, center, color):
+    """
+    Draws a vector circle.
+
+    radius : number
+        the radius of the circle
+
+    center : point
+        the center coordinate (x, y) point of the circle
+
+    line_color : color of the circle edge and fill color.
+
+    """
+    App.Do(Environment, 'CreateEllipseObject', {
+        'Antialias': True,
+        'MiterLimit': 15,
+        'Join': App.Constants.JointStyle.Miter,
+        'CreateAsVector': True,
+        'Fill': {
+            'Color': color,
+            'Pattern': None,
+            'Gradient': None,
+            'Texture': None,
+            'Art': None},
+
+        'LineStyle': None,
+        'LineWidth': 0,
+        'Stroke': None,
+        'ObjectName': 'Rotation',
+        'RadiusX': radius - .5,
+        'RadiusY': radius - .5,
+        'CenterX': center[0],
+        'CenterY': center[1],
+        'Matrix': None,
+        'Visibility': True,
+        'GeneralSettings': SILENT})
+
+
+def draw_line(a, b):
+    """
+    Draws a line between points a and b.
+    The vector layer must have been prepped with NewDrawingObject.
+
+    a : point
+    b : point
+    Points are a pair of floating point numbers representing x, y.
+    """
+    # Calculate the difference between point a and b:
+    d = (int(b[0] - a[0]), int(b[1] - a[1]))
+
+    # Draw the point:
+    App.Do(Environment, 'NodeEditOffset', {
+        'NodeEditOffsetPoint': d,
+        'NodeEditAddPoint': a,
+        'NodeEditNodeOffsetControlKeyState': False,
+        'NodeEditNodeOffsetShiftKeyState': False,
+        'NodeEditNodeOffsetAddNode': True,
+        'NodeEditNodeOffsetPart': 0,
+        'NodeEditNodeOffsetDoLine': True,
+        'NodeEditContinuous': False,
+        'GeneralSettings': SILENT})
+
+
+def draw_triangle(radius, line_color, up=True):
+    """
+    Draws a triangle inside the circle with a radius,
+    and pointing up or down.
+
+    radius : float
+        This the radius of the triangle.
+
+    line_color : tuple
+    These are colors are (r, g, b),
+    where r, g, b are color component integers.
+
+    up : bool
+        When true, the triangle points up.
+        Otherwise, the triangle points down.
+
+    return:
+        float
+            radius of the inscribed circle of the triangle
+    """
+    prep_for_drawing_line(line_color)
+
+    degree_60 = 1.0472
+    degree_120 = 2.0943951
+    degree_180 = 3.14159
+    degree_240 = 4.18879
+    degree_300 = 5.23599
+
+    if up:
+        ax, ay = get_point(degree_120, radius)
+        bx, by = get_point(degree_240, radius)
+        cx, cy = get_point(0, radius)
+        mid = (ay + by) / 2
+        next_radius = mid - CENTER_Y
+
+    else:
+        ax, ay = get_point(degree_60, radius)
+        bx, by = get_point(degree_300, radius)
+        cx, cy = get_point(degree_180, radius)
+        mid = (ay + by) / 2
+        next_radius = abs(mid - CENTER_Y)
+
+    # Draw the first line:
+    draw_line((ax, ay), (bx, by))
+    draw_line((ax, ay), (cx, cy))
+    draw_line((bx, by), (cx, cy))
+    return next_radius
+
+
+def fill(point, color):
+    App.Do( Environment, 'Fill', {
+            'BlendMode': App.Constants.BlendMode.Normal,
+            'MatchMode': App.Constants.MatchMode.Color,
+            'Material': {
+                'Color': color,
+                'Pattern': None,
+                'Gradient': None,
+                'Texture': None,
+                'Art': None},
+
+            'UseForeground': True,
+            'Opacity': 100,
+            'Point': point,
+            'SampleMerged': False,
+            'Tolerance': 20,
+            'GeneralSettings': {
+                'ExecutionMode': App.Constants.ExecutionMode.Silent}
+            })
+
+
+def get_point(angle, radius):
+    """
+    Returns a point the circle that corresponds to the rotation.
+
+    angle : float
+        the rotation angle.
+
+    radius : float
+        the radius of the circle.
+
+    Returns:
+        x : float
+        y : float
+        the point on the circle.
+    """
+    x = (math.sin(angle) * radius) + CENTER_X
+    y = (math.cos(angle) * -radius) + CENTER_Y
+    return x, y
+
+
+def make_new_vector_layer(layer_name):
+    """
+    Creates a new vector layer.
+
+    layer_name : string
+        This is the name of the vector layer.
+    """
+    App.Do(Environment, 'NewVectorLayer', {
+        'General': {
+            'Opacity': 100,
+            'Name': layer_name,
+            'IsVisible': True,
+            'IsTransparencyLocked': False,
+            'LinkSet': 0,
+            'UseHighlight': False,
+            'PaletteHighlightColor': (255,255,64),
+            'GroupLink': True,
+            'BlendMode': App.Constants.BlendMode.Normal},
+
+        'BlendRanges': {
+            'BlendRangeGreen': (0,0,255,255,0,0,255,255),
+            'BlendRangeRed': (0,0,255,255,0,0,255,255),
+            'BlendRangeBlue': (0,0,255,255,0,0,255,255),
+            'BlendRangeGrey': (0,0,255,255,0,0,255,255)},
+        'GeneralSettings': SILENT})
+
+
+def prep_for_drawing_line(line_color):
+    """
+    Prepare PSP to draw some vectors with a line_color attribute.
+
+    line_color : (r, g, b)
+        r, g, b are integers of color components.
+    """
+    App.Do(Environment, 'NewDrawingObject', {
+        'Antialias': True,
+        'MiterLimit': 15,
+        'Join': App.Constants.JointStyle.Miter,
+        'CreateAsVector': True,
+        'Fill': {
+            'Color': None,
+            'Pattern': None,
+            'Gradient': None,
+            'Texture': None,
+            'Art': None},
+
+        'LineStyle': {
+            'Name': u'',
+            'FirstCap': (u'Butt',7.21,7.21),
+            'LastCap': (u'Butt',1,1),
+            'FirstSegCap': None,
+            'LastSegCap': None,
+            'UseSegmentCaps': False,
+            'Segments': None},
+
+        'LineWidth': LINE_WIDTH,
+        'Stroke': {
+            'Color': line_color,
+            'Pattern': None,
+            'Gradient': None,
+            'Texture': None,
+            'Art': None},
+
+        'Path': None,
+        'ObjectName': u'Triangle',
+        'Visibility': True,
+        'GeneralSettings': SILENT})
+
+
+def Do(E):
+    """ This is the start of the script. """
+    global Environment
+
+    Environment = E
+    App.Do(Environment, 'EnableOptimizedScriptUndo', GENERAL_SETTINGS)
+
+    # This forms the base layer:
+    App.Do(Environment, 'NewFile', {
+        'Width': 1000,
+        'Height': 1000,
+        'ColorDepth': App.Constants.Colordepth.SixteenMillionColor,
+        'DimensionUnits': App.Constants.DimensionType.Pixels,
+        'ResolutionUnits': App.Constants.ResolutionUnits.PixelsPerIn,
+        'Resolution': 200,
+        'FillMaterial': {
+            'Color': None,
+            'Pattern': None,
+            'Gradient': None,
+            'Texture': None,
+            'Art': None},
+
+        'Transparent': False,
+        'LayerType': App.Constants.NewLayerType.Raster,
+        'GeneralSettings': SILENT})
+
+    # Select document for drawing vectors:
+    App.Do(Environment, 'SelectDocument', {
+        'SelectedImage': 0,
+        'Strict': False,
+        'GeneralSettings': SILENT})
+
+    make_new_vector_layer("Circle")
+
+    # Draw a circle at the center of the image:
+    App.Do(Environment, 'CreateEllipseObject', {
+        'Antialias': True,
+        'MiterLimit': 15,
+        'Join': App.Constants.JointStyle.Miter,
+        'CreateAsVector': True,
+        'Fill': {
+            'Color': (0, 0, 0),
+            'Pattern': None,
+            'Gradient': None,
+            'Texture': None,
+            'Art': None},
+
+        'LineStyle': {
+            'Name': u'',
+            'FirstCap': (u'Butt',7.21,7.21),
+            'LastCap': (u'Butt',1,1),
+            'FirstSegCap': None,
+            'LastSegCap': None,
+            'UseSegmentCaps': False,
+            'Segments': None},
+
+        'LineWidth': LINE_WIDTH,
+        'Stroke': {
+            'Color': LINE_COLOR,
+            'Pattern': None,
+            'Gradient': None,
+            'Texture': None,
+            'Art': None},
+
+        'ObjectName': 'Rotation',
+        'RadiusX': RADIUS - .5,
+        'RadiusY': RADIUS - .5,
+        'CenterX': CENTER_X,
+        'CenterY': CENTER_Y,
+        'Matrix': None,
+        'Visibility': True,
+        'GeneralSettings': SILENT})
+
+    # Draw cube:
+    cube_points = [0, 0, 0, 0, 0, 0]
+    angle = DEGREE_60 / 2
+
+    for i in range(6):
+        cube_points[i] = get_point(angle, RADIUS)
+        angle += DEGREE_60
+
+    prep_for_drawing_line(LINE_COLOR)
+
+    for i in range(6):
+        a = cube_points[i]
+
+        if i != 5:
+            b = cube_points[i + 1]
+
+        else:
+            b = cube_points[0]
+        draw_line(a, b)
+
+    # Draw lights:
+    lights_radius = int((RADIUS - (cube_points[2][1] - CENTER_Y)) / 2)
+    lights_perimeter_radius = RADIUS - lights_radius
+    angle = TOP_POINT
+
+    for i in range(6):
+        x, y = get_point(angle, lights_perimeter_radius)
+        angle += DEGREE_60
+        draw_circle(lights_radius - LINE_WIDTH / 2, (x, y), (255, 255, 255))
+
+    # Draw shelter:
+    prep_for_drawing_line(SEAM_COLOR)
+
+    angle = DEGREE_60 / 2
+    cube_points2 = [0, 0, 0, 0, 0, 0]
+
+    for i in range(6):
+        a = get_point(angle, INNER_RADIUS)
+        angle += DEGREE_60
+        b = get_point(angle, INNER_RADIUS)
+
+        draw_line(a, b)
+        cube_points2[i] = a
+
+    fill((CENTER_X, CENTER_Y), SHELTER_COLOR)
+    App.Do( Environment, 'Fill', {
+        'BlendMode': App.Constants.BlendMode.Normal,
+        'MatchMode': App.Constants.MatchMode.Color,
+        'Material': {
+            'Color': None,
+            'Pattern': None,
+            'Gradient': {
+                'Name': u'b&w',
+                'GradientType': App.Constants.Gradient.Sunburst,
+                'Angle': 0,
+                'RepeatCount': 0,
+                'RepeatType': App.Constants.RepeatType.Pad,
+                'ColorStops': None,
+                'TransparencyStops': [],
+                'CenterPoint': (0.5,0.5),
+                'FocalPoint': (0.5,0.5),
+                'Invert': False
+                },
+            'Texture': None,
+            'Art': None},
+
+        'UseForeground': True,
+        'Opacity': 100,
+        'Point': (CENTER_X, CENTER_Y + RADIUS / 2),
+        'SampleMerged': False,
+        'Tolerance': 20,
+        'GeneralSettings': {
+            'ExecutionMode': App.Constants.ExecutionMode.Silent}})
+
+    # Draw seams:
+    prep_for_drawing_line(SEAM_COLOR)
+
+    for i in range(6):
+        a = cube_points[i]
+        b = cube_points2[i]
+        draw_line(a, b)
+
+    # Draw door:
+    x = CENTER_X
+    y1 = cube_points[2][1]
+    y2 = cube_points2[2][1]
+    draw_line((x, y1), (x, y2))
+
+    App.Do(Environment, 'LayerSetVisibility', {
+        'Command': App.Constants.ShowCommands.Hide,
+        'Path': (0, -2, [], False),
+        'WorkingMode': 0,
+        'GeneralSettings': SILENT})
